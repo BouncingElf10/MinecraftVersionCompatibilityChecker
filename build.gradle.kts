@@ -15,4 +15,24 @@ plugins {
     `kotlin-dsl`
     kotlin("jvm") version "2.0.0"
     kotlin("plugin.serialization") version "2.0.0"
+    id("com.gradle.plugin-publish") version "1.2.1"
+}
+
+
+group = "com.bouncingelf10"
+version = "1.0.0"
+
+gradlePlugin {
+    website = "https://github.com/BouncingElf10/MinecraftVersionCompatibilityChecker"
+    vcsUrl = "https://github.com/BouncingElf10/MinecraftVersionCompatibilityChecker"
+
+    plugins {
+        create("minecraftVersionCompatibilityChecker") {
+            id = "com.bouncingelf10.minecraft-version-compatibility-checker"
+            displayName = "MinecraftVersionCompatibilityChecker"
+            description = "A gradle plugin that tests if your mod is compatible with other versions automatically"
+            tags = listOf("minecraft", "fabric", "modding")
+            implementationClass = "fabric.compat.FabricCompatPlugin"
+        }
+    }
 }
