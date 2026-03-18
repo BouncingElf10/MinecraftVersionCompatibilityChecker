@@ -6,7 +6,7 @@ A Gradle plugin that verifies your fabric mod's compatibility across different M
 
 ```kotlin
 plugins {
-    id("com.bouncingelf10.minecraft-version-compatibility-checker") version "1.0.0"
+    id("com.bouncingelf10.minecraft-version-compatibility-checker") version "1.1.0"
 }
 ```
 
@@ -34,7 +34,7 @@ fabricCompat {
     checkOlderVersions = true
 
     // Pin the Fabric Loom version used for test builds.
-    // Default: null (auto-resolved from Fabric Maven)
+    // Default: null (auto-resolved from gradle.properties)
     loomVersion = null
 
     // Pin the Fabric loader version used for test builds.
