@@ -20,7 +20,7 @@ plugins {
 
 
 group = "com.bouncingelf10"
-version = "1.2.0"
+version = "1.3.0"
 
 gradlePlugin {
     website = "https://github.com/BouncingElf10/MinecraftVersionCompatibilityChecker"

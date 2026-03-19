@@ -55,5 +55,9 @@ fabricCompat {
     // Print full build output for passing versions too.
     // Default: false
     verbose = false
+
+    // Decides if it bumps the version up or down
+    // Default: true    // bumps up!
+    bumpUp
 }
 ```
