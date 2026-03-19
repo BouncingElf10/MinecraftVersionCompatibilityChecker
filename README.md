@@ -6,7 +6,7 @@ A Gradle plugin that verifies your fabric mod's compatibility across different M
 
 ```kotlin
 plugins {
-    id("com.bouncingelf10.minecraft-version-compatibility-checker") version "1.1.0"
+    id("com.bouncingelf10.minecraft-version-compatibility-checker") version "1.2.0"
 }
 ```
 
