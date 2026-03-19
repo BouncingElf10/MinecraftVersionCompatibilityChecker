@@ -12,6 +12,8 @@ plugins {
 
 `checkMinecraftCompatibility` -> starts the testing
 
+`bumpMinecraftVersion` -> bumps the current version by one
+
 `revertCompatPatches` -> reverts the changes if you made the plugin change any files
 
 ## Config
