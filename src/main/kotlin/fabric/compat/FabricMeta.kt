@@ -48,6 +48,12 @@ object FabricMeta {
 
     suspend fun getAllStableVersions(): List<MinecraftVersion> = getStableVersionList()
 
+    suspend fun getNextStableVersionAfter(version: String): String? {
+        val list = getStableVersionList()
+        val idx = list.indexOfFirst { it.version == version }
+        return if (idx > 0) list[idx - 1].version else null
+    }
+
     suspend fun prewarmLoader(overrideVersion: String? = null, projectDir: File? = null) {
         if (overrideVersion != null) {
             loaderCache = LoaderVersion(overrideVersion, true)
