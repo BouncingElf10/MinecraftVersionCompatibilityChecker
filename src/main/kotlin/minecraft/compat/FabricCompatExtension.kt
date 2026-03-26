@@ -1,17 +1,34 @@
-package fabric.compat
+package minecraft.compat
+
+import java.io.File
 
 /**
  * Configuration for the fabric-compat plugin.
  *
- * In build.gradle:
+ * In build.gradle.kts:
  *
  *   fabricCompat {
+ *       // Loader is auto-detected from project files; override explicitly if needed:
+ *       modLoader = ModLoader.NEOFORGE
+ *
  *       maxStrikes = 2
  *       checkNewerVersions = false
+ *
+ *       // Fabric-specific overrides
  *       loomVersion = "1.9-SNAPSHOT"
+ *
+ *       // NeoForge-specific overrides
+ *       neoforgeVersion = "21.1.85"
  *   }
  */
 open class FabricCompatExtension {
+
+    /**
+     * The mod loader to target.
+     * Default: null — auto-detected from project files via [ModLoader.detect].
+     * Set explicitly if auto-detection picks the wrong loader.
+     */
+    var modLoader: ModLoader? = null
 
     /**
      * How many consecutive build failures in a given direction (older/newer)
@@ -34,9 +51,7 @@ open class FabricCompatExtension {
 
     /**
      * Override the Fabric Loom version used for all test builds.
-     * If null (default), the loom version is resolved automatically from the
-     * Fabric Maven metadata to the latest version compatible with each MC version.
-     * Set this if auto-resolution picks a version that doesn't work for you.
+     * If null (default), auto-resolved from Fabric Maven metadata.
      * Example: "1.9-SNAPSHOT"
      */
     var loomVersion: String? = null
@@ -48,9 +63,15 @@ open class FabricCompatExtension {
     var loaderVersion: String? = null
 
     /**
+     * Override the NeoForge version used for all test builds.
+     * If null (default), the latest release for each tested MC version is used.
+     * Example: "21.1.85"
+     */
+    var neoforgeVersion: String? = null
+
+    /**
      * Gradle tasks to invoke for each test build.
-     * Default: ["build"] — change to e.g. ["compileJava"] for a faster check
-     * that skips jar packaging and other post-compile steps.
+     * Default: ["build"] — change to e.g. ["compileJava"] for a faster check.
      */
     var buildTasks: List<String> = listOf("build")
 
@@ -66,9 +87,7 @@ open class FabricCompatExtension {
      */
     var verbose: Boolean = false
 
-    /**
-     * If true, the next version will bump up the version of the mod, if false, it will bump down.
-     * Default: true
-     */
-    var bumpUp: Boolean = true
+    /** Returns the configured loader, or auto-detects from [projectDir]. */
+    fun resolvedModLoader(projectDir: File): ModLoader =
+        modLoader ?: ModLoader.detect(projectDir)
 }

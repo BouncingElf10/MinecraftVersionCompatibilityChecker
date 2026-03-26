@@ -1,17 +1,25 @@
-package fabric.compat
+package minecraft.compat
 
-import fabric.compat.structs.Ansi
+import minecraft.compat.structs.Ansi
 import java.io.File
 
 object CompatPatcher {
     fun buildMinecraftRange(passingVersions: List<String>): String {
         if (passingVersions.isEmpty()) return "*"
-        val sorted = passingVersions.sortedWith(compareBy {
-            it.split(".").map { p -> p.toIntOrNull() ?: 0 }.let { parts ->
-                parts.getOrElse(0) { 0 } * 10_000 + parts.getOrElse(1) { 0 } * 100 + parts.getOrElse(2) { 0 }
-            }
-        })
+        val sorted = passingVersions.sortedWith(versionComparator)
         return if (sorted.size == 1) sorted[0] else ">=${sorted.first()} <=${sorted.last()}"
+    }
+
+    fun buildNeoForgeRange(passingVersions: List<String>): String {
+        if (passingVersions.isEmpty()) return "[0,)"
+        val sorted = passingVersions.sortedWith(versionComparator)
+        return if (sorted.size == 1) "[${sorted[0]},${sorted[0]}]"
+        else "[${sorted.first()},${sorted.last()}]"
+    }
+
+    private val versionComparator = compareBy<String> {
+        it.split(".").map { p -> p.toIntOrNull() ?: 0 }
+            .let { parts -> parts.getOrElse(0) { 0 } * 10_000 + parts.getOrElse(1) { 0 } * 100 + parts.getOrElse(2) { 0 } }
     }
 
     fun backupDir(projectDir: File): File = File(projectDir, ".gradle/compat-backups")
@@ -31,8 +39,16 @@ object CompatPatcher {
             "fabric.mod.json.bak" to listOf(
                 File(projectDir, "src/main/resources/fabric.mod.json"), File(projectDir, "fabric.mod.json")
             ),
+            "neoforge.mods.toml.bak" to listOf(
+                File(projectDir, "src/main/resources/META-INF/neoforge.mods.toml"),
+                File(projectDir, "src/main/templates/META-INF/neoforge.mods.toml")
+            ),
+            "mods.toml.bak" to listOf(
+                File(projectDir, "src/main/resources/META-INF/mods.toml")
+            ),
             "build.gradle.kts.bak" to listOf(File(projectDir, "build.gradle.kts")),
-            "build.gradle.bak" to listOf(File(projectDir, "build.gradle"))
+            "build.gradle.bak" to listOf(File(projectDir, "build.gradle")),
+            "gradle.properties.bak" to listOf(File(projectDir, "gradle.properties"))
         )
 
         return bakFiles.map { bak ->
@@ -62,9 +78,9 @@ object CompatPatcher {
     fun printRevertResult(result: RevertResult) {
         when (result) {
             is RevertResult.Restored -> println("  ${Ansi.GREEN}RESTORED${Ansi.RESET}  ${Ansi.DIM}${result.filePath}${Ansi.RESET}")
-            is RevertResult.DestinationMissing -> println("  ${Ansi.RED}MISSING${Ansi.RESET}   ${result.bakName} — destination not found (tried: ${result.tried.joinToString()})")
-            is RevertResult.UnknownBackup -> println("  ${Ansi.DIM}SKIP${Ansi.RESET}      ${result.bakName} — not a recognised backup, leaving in place")
-            is RevertResult.NoneFound -> println("  ${Ansi.DIM}Nothing to revert — no backups found in .gradle/compat-backups/${Ansi.RESET}")
+            is RevertResult.DestinationMissing -> println("  ${Ansi.RED}MISSING${Ansi.RESET}   ${result.bakName} - destination not found (tried: ${result.tried.joinToString()})")
+            is RevertResult.UnknownBackup -> println("  ${Ansi.DIM}SKIP${Ansi.RESET}      ${result.bakName} - not a recognised backup, leaving in place")
+            is RevertResult.NoneFound -> println("  ${Ansi.DIM}Nothing to revert - no backups found in .gradle/compat-backups/${Ansi.RESET}")
         }
     }
 
@@ -76,12 +92,8 @@ object CompatPatcher {
             ?: return PatchResult.NotFound("fabric.mod.json not found in src/main/resources/ or project root")
 
         val original = modJson.readText()
-
-
         val regex = Regex("""("minecraft"\s*:\s*)"([^"]*)"(?=\s*[,\}])""")
-        if (!regex.containsMatchIn(original)) {
-            return PatchResult.NotFound("""No "minecraft" key found inside depends in ${modJson.path}""")
-        }
+        if (!regex.containsMatchIn(original)) return PatchResult.NotFound("""No "minecraft" key found inside depends in ${modJson.path}""")
 
         val patched = regex.replace(original) { mr -> """${mr.groupValues[1]}"$range"""" }
         if (patched == original) return PatchResult.NoChange
@@ -89,6 +101,63 @@ object CompatPatcher {
         writeBackup(projectDir, modJson, original)
         modJson.writeText(patched)
         return PatchResult.Success(modJson.path)
+    }
+
+    fun patchModsToml(projectDir: File, passingVersions: List<String>): PatchResult {
+        val candidates = listOf(
+            File(projectDir, "src/main/resources/META-INF/neoforge.mods.toml"),
+            File(projectDir, "src/main/templates/META-INF/neoforge.mods.toml"),
+            File(projectDir, "src/main/resources/META-INF/mods.toml")
+        )
+        val tomlFile = candidates.firstOrNull { it.exists() }
+            ?: return PatchResult.NotFound("neoforge.mods.toml / mods.toml not found in src/main/resources/META-INF/ or src/main/templates/META-INF/")
+
+        val original = tomlFile.readText()
+
+
+        if (Regex("""versionRange\s*=\s*"\$\{[^}]+\}"""").containsMatchIn(original)) {
+            return PatchResult.NotFound(
+                "${tomlFile.name} uses a Gradle property placeholder for versionRange - " + "update the corresponding property in gradle.properties instead"
+            )
+        }
+
+        val range = buildNeoForgeRange(passingVersions)
+        val lines = original.lines().toMutableList()
+
+        var inMinecraftDep = false
+        var patched = false
+
+        for (i in lines.indices) {
+            val trimmed = lines[i].trim()
+
+
+            if (trimmed.matches(Regex("""modId\s*=\s*["']minecraft["']"""))) {
+                inMinecraftDep = true
+            }
+
+            if (inMinecraftDep && trimmed.startsWith("[[")) {
+                inMinecraftDep = false
+            }
+
+            if (inMinecraftDep && trimmed.matches(Regex("""versionRange\s*=\s*"[^"]*""""))) {
+                val indent = lines[i].takeWhile { it.isWhitespace() }
+                val key = trimmed.substringBefore("=").trimEnd()
+                lines[i] = """$indent$key = "$range""""
+                patched = true
+                inMinecraftDep = false
+            }
+        }
+
+        if (!patched) return PatchResult.NotFound(
+            """No versionRange line found after modId="minecraft" in ${tomlFile.name}"""
+        )
+
+        val newContent = lines.joinToString("\n")
+        if (newContent == original) return PatchResult.NoChange
+
+        writeBackup(projectDir, tomlFile, original)
+        tomlFile.writeText(newContent)
+        return PatchResult.Success(tomlFile.path)
     }
 
     fun patchBuildGradle(projectDir: File, passingVersions: List<String>): PatchResult {
@@ -102,7 +171,7 @@ object CompatPatcher {
 
         if (!original.contains("publishMods")) {
             return PatchResult.NotFound(
-                "No publishMods block found in ${buildFile.name} — mod-publish-plugin not detected"
+                "No publishMods block found in ${buildFile.name} - mod-publish-plugin not detected"
             )
         }
 
@@ -121,9 +190,7 @@ object CompatPatcher {
         return PatchResult.Success(buildFile.path)
     }
 
-    private fun replaceInEachPublisherBlock(
-        source: String, passingVersions: List<String>, addCallRegex: Regex
-    ): String {
+    private fun replaceInEachPublisherBlock(source: String, passingVersions: List<String>, addCallRegex: Regex): String {
         val publisherNames = setOf("modrinth", "curseforge", "github", "gitlab", "discord")
         val blockOpenRegex = Regex("""\b(${publisherNames.joinToString("|")})\s*\{""")
 
@@ -133,23 +200,18 @@ object CompatPatcher {
         for (match in blockOpenRegex.findAll(source)) {
             val openBracePos = match.range.last
             val blockStart = openBracePos + 1
-
             val blockEnd = findMatchingBrace(source, openBracePos) ?: continue
-
 
             val adjStart = blockStart + offset
             val adjEnd = blockEnd + offset
             val blockBody = result.substring(adjStart, adjEnd)
 
-
             val firstAdd = addCallRegex.find(blockBody) ?: continue
             val indent = firstAdd.groupValues[1]
-
 
             val replacement = passingVersions.joinToString("\n") { v ->
                 """${indent}minecraftVersions.add("$v")"""
             } + "\n"
-
 
             var insertPos: Int? = null
             val stripped = buildString {
@@ -161,7 +223,6 @@ object CompatPatcher {
                 }
                 append(blockBody, pos, blockBody.length)
             }
-
 
             val newBody = if (insertPos != null) {
                 stripped.substring(0, insertPos!!) + replacement + stripped.substring(insertPos!!)
@@ -182,8 +243,7 @@ object CompatPatcher {
             when (source[i]) {
                 '{' -> depth++
                 '}' -> {
-                    depth--
-                    if (depth == 0) return i
+                    depth--; if (depth == 0) return i
                 }
             }
         }
@@ -199,10 +259,8 @@ object CompatPatcher {
     fun printPatchResult(label: String, result: PatchResult) {
         when (result) {
             is PatchResult.Success -> println("  ${Ansi.GREEN}PATCHED${Ansi.RESET}  $label → ${Ansi.DIM}${result.filePath}${Ansi.RESET}")
-
-            is PatchResult.NotFound -> println("  ${Ansi.DIM}SKIP${Ansi.RESET}     $label — ${result.reason}")
-
-            is PatchResult.NoChange -> println("  ${Ansi.DIM}SKIP${Ansi.RESET}     $label — already up to date")
+            is PatchResult.NotFound -> println("  ${Ansi.DIM}SKIP${Ansi.RESET}     $label - ${result.reason}")
+            is PatchResult.NoChange -> println("  ${Ansi.DIM}SKIP${Ansi.RESET}     $label - already up to date")
         }
     }
 }

@@ -1,6 +1,6 @@
 ## Minecraft Version Compatibility Checker
 
-A Gradle plugin that verifies your fabric mod's compatibility across different Minecraft versions.
+A Gradle plugin that verifies your minecraft mod's compatibility across different Minecraft versions.
 
 ## Usage
 

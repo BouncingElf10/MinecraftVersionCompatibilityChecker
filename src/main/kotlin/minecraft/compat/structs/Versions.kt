@@ -1,4 +1,4 @@
-package fabric.compat.structs
+package minecraft.compat.structs
 
 import kotlinx.serialization.Serializable
 
@@ -31,4 +31,9 @@ data class Versions(
     val yarnVersion: YarnVersion,
     val fabricApiVersion: String,
     val loomVersion: String
+)
+
+data class NeoForgeVersions(
+    val mcVersion: String,
+    val neoforgeVersion: String
 )

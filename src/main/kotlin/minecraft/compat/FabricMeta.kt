@@ -1,10 +1,10 @@
-package fabric.compat
+package minecraft.compat
 
-import fabric.compat.structs.LoaderVersion
-import fabric.compat.structs.MinecraftVersion
-import fabric.compat.structs.Versions
-import fabric.compat.structs.VersionsResponse
-import fabric.compat.structs.YarnVersion
+import minecraft.compat.structs.LoaderVersion
+import minecraft.compat.structs.MinecraftVersion
+import minecraft.compat.structs.Versions
+import minecraft.compat.structs.VersionsResponse
+import minecraft.compat.structs.YarnVersion
 import io.ktor.client.*
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.*
@@ -52,12 +52,6 @@ object FabricMeta {
         val list = getStableVersionList()
         val idx = list.indexOfFirst { it.version == version }
         return if (idx > 0) list[idx - 1].version else null
-    }
-
-    suspend fun getPrevStableVersionAfter(version: String): String? {
-        val list = getStableVersionList()
-        val idx = list.indexOfFirst { it.version == version }
-        return if (idx < list.size - 1) list[idx + 1].version else null
     }
 
     suspend fun prewarmLoader(overrideVersion: String? = null, projectDir: File? = null) {
