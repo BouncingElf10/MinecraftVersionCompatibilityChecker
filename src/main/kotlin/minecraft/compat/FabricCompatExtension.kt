@@ -87,7 +87,21 @@ open class FabricCompatExtension {
      */
     var verbose: Boolean = false
 
-    /** Returns the configured loader, or auto-detects from [projectDir]. */
+    /**
+     * Whether bumpMinecraftVersion walks forward (newer) or backward (older).
+     * Default: true — bumps to the next newer version.
+     * Set to false to bump down to the previous older version instead.
+     */
+    var bumpUp: Boolean = true
+
+    /**
+     * Pin bumpMinecraftVersion to a specific target MC version instead of
+     * auto-resolving the next/previous version.
+     * Default: null — auto-resolved based on [bumpUp].
+     * Example: "1.21.4"
+     */
+    var bumpTargetVersion: String? = null
+
     fun resolvedModLoader(projectDir: File): ModLoader =
         modLoader ?: ModLoader.detect(projectDir)
 }

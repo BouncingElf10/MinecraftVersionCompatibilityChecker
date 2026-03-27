@@ -94,4 +94,15 @@ object NeoForgeMeta {
         val idx = versions.indexOfFirst { it == current }
         return if (idx > 0) versions[idx - 1] else null
     }
+
+    suspend fun getPreviousMcVersionBefore(current: String): String? {
+        val versions = getAllSupportedMcVersions().sortedWith(
+            compareByDescending {
+                it.split(".").map { p -> p.toIntOrNull() ?: 0 }
+                    .let { p -> p.getOrElse(0) { 0 } * 10_000 + p.getOrElse(1) { 0 } * 100 + p.getOrElse(2) { 0 } }
+            }
+        )
+        val idx = versions.indexOfFirst { it == current }
+        return if (idx != -1 && idx < versions.size - 1) versions[idx + 1] else null
+    }
 }
