@@ -4,11 +4,11 @@ import minecraft.compat.structs.ModLoader
 import java.io.File
 
 /**
- * Configuration for the fabric-compat plugin.
+ * Configuration for the plugin.
  *
  * In build.gradle.kts:
  *
- *   fabricCompat {
+ *   minecraftCompat {
  *       // Loader is auto-detected from project files; override explicitly if needed:
  *       modLoader = ModLoader.NEOFORGE
  *

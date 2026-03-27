@@ -13,9 +13,9 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import java.io.File
 
-class FabricCompatPlugin : Plugin<Project> {
+class MinecraftCompatPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val config = project.extensions.create("fabricCompat", MinecraftCompatExtension::class.java)
+        val config = project.extensions.create("minecraftCompat", MinecraftCompatExtension::class.java)
 
         project.tasks.register("checkMinecraftCompatibility") {
             group = "minecraft-compatibility-checker"
