@@ -175,8 +175,15 @@ class FabricCompatPlugin : Plugin<Project> {
 
         println("  Current target version: ${Ansi.BOLD}$currentTarget${Ansi.RESET}")
 
-        val nextVersion = runBlocking { FabricMeta.getNextStableVersionAfter(currentTarget) } ?: run {
-            println("  ${Ansi.RED}No newer stable Minecraft version found - you're already on the latest.${Ansi.RESET}")
+        val nextVersion = config.bumpTargetVersion ?: run {
+            if (config.bumpUp) {
+                runBlocking { FabricMeta.getNextStableVersionAfter(currentTarget) }
+            } else {
+                runBlocking { FabricMeta.getPreviousStableVersionBefore(currentTarget) }
+            }
+        } ?: run {
+            val direction = if (config.bumpUp) "newer" else "older"
+            println("  ${Ansi.RED}No $direction stable Minecraft version found - you're already on the ${if (config.bumpUp) "latest" else "oldest"}.${Ansi.RESET}")
             println()
             return
         }
@@ -201,8 +208,15 @@ class FabricCompatPlugin : Plugin<Project> {
         val currentVersion = NeoForgeMeta.getCurrentMcVersion(projectDir)
         println("  Current target version: ${Ansi.BOLD}$currentVersion${Ansi.RESET}")
 
-        val nextVersion = runBlocking { NeoForgeMeta.getNextMcVersionAfter(currentVersion) } ?: run {
-            println("  ${Ansi.RED}No newer NeoForge-supported MC version found - you're already on the latest.${Ansi.RESET}")
+        val nextVersion = config.bumpTargetVersion ?: run {
+            if (config.bumpUp) {
+                runBlocking { NeoForgeMeta.getNextMcVersionAfter(currentVersion) }
+            } else {
+                runBlocking { NeoForgeMeta.getPreviousMcVersionBefore(currentVersion) }
+            }
+        } ?: run {
+            val direction = if (config.bumpUp) "newer" else "older"
+            println("  ${Ansi.RED}No $direction NeoForge-supported MC version found - you're already on the ${if (config.bumpUp) "latest" else "oldest"}.${Ansi.RESET}")
             println()
             return
         }
