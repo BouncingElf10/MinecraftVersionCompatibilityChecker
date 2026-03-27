@@ -6,9 +6,10 @@ A Gradle plugin that verifies your minecraft mod's compatibility across differen
 
 ```kotlin
 plugins {
-    id("com.bouncingelf10.minecraft-version-compatibility-checker") version "1.2.0"
+    id("com.bouncingelf10.minecraft-version-compatibility-checker") version "1.X.0"
 }
 ```
+check version at: [the gradle website](https://plugins.gradle.org/plugin/com.bouncingelf10.minecraft-version-compatibility-checker)
 
 `checkMinecraftCompatibility` -> starts the testing
 
