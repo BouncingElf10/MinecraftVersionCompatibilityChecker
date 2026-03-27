@@ -1,5 +1,6 @@
-package minecraft.compat
+package minecraft.compat.internal
 
+import minecraft.compat.meta.NeoForgeMeta
 import minecraft.compat.structs.Ansi
 import minecraft.compat.structs.NeoForgeVersions
 import minecraft.compat.structs.Versions

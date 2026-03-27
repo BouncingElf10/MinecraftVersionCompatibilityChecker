@@ -1,5 +1,6 @@
 package minecraft.compat
 
+import minecraft.compat.structs.ModLoader
 import java.io.File
 
 /**
@@ -21,11 +22,11 @@ import java.io.File
  *       neoforgeVersion = "21.1.85"
  *   }
  */
-open class FabricCompatExtension {
+open class MinecraftCompatExtension {
 
     /**
      * The mod loader to target.
-     * Default: null — auto-detected from project files via [ModLoader.detect].
+     * Default: null — auto-detected from project files via [minecraft.compat.structs.ModLoader.detect].
      * Set explicitly if auto-detection picks the wrong loader.
      */
     var modLoader: ModLoader? = null

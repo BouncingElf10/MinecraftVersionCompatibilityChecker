@@ -1,4 +1,4 @@
-package minecraft.compat
+package minecraft.compat.meta
 
 import minecraft.compat.structs.LoaderVersion
 import minecraft.compat.structs.MinecraftVersion
@@ -12,6 +12,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
+import minecraft.compat.MinecraftCompatExtension
 import java.io.File
 import java.util.Locale.getDefault
 
@@ -99,7 +100,7 @@ object FabricMeta {
         return resolved
     }
 
-    suspend fun resolveVersions(mcVersion: String, config: FabricCompatExtension, projectDir: File): Versions {
+    suspend fun resolveVersions(mcVersion: String, config: MinecraftCompatExtension, projectDir: File): Versions {
         val loader = loaderCache ?: error("Call prewarmLoader() before resolveVersions()")
         val loom = resolveLoomVersion(config.loomVersion, projectDir)
 

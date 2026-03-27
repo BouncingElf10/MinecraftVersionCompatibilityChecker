@@ -20,7 +20,7 @@ plugins {
 
 
 group = "com.bouncingelf10"
-version = "1.5.0"
+version = "1.6.0"
 
 gradlePlugin {
     website = "https://github.com/BouncingElf10/MinecraftVersionCompatibilityChecker"
@@ -32,7 +32,7 @@ gradlePlugin {
             displayName = "MinecraftVersionCompatibilityChecker"
             description = "A gradle plugin that tests if your mod is compatible with other versions automatically"
             tags = listOf("minecraft", "fabric", "neoforge", "modding")
-            implementationClass = "minecraft.compat.FabricCompatPlugin"
+            implementationClass = "minecraft.compat.MinecraftCompatPlugin"
         }
     }
 }
