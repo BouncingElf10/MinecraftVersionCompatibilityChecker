@@ -1,4 +1,4 @@
-package minecraft.compat
+package minecraft.compat.meta
 
 import io.ktor.client.*
 import io.ktor.client.call.body

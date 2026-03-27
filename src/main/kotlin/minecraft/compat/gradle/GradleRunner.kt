@@ -1,8 +1,12 @@
-package minecraft.compat
+package minecraft.compat.gradle
 
 import minecraft.compat.structs.Ansi
 import minecraft.compat.structs.Versions
 import kotlinx.coroutines.*
+import minecraft.compat.MinecraftCompatExtension
+import minecraft.compat.meta.FabricMeta
+import minecraft.compat.meta.NeoForgeMeta
+import minecraft.compat.structs.ModLoader
 import minecraft.compat.structs.NeoForgeVersions
 import java.io.File
 
@@ -18,13 +22,13 @@ object GradleRunner {
     private val isWindows = System.getProperty("os.name").lowercase().contains("win")
     private val gradleWrapper = if (isWindows) "gradlew.bat" else "gradlew"
 
-    suspend fun doTests(projectDir: File, config: FabricCompatExtension): List<TestResult> =
+    suspend fun doTests(projectDir: File, config: MinecraftCompatExtension): List<TestResult> =
         when (config.resolvedModLoader(projectDir)) {
             ModLoader.FABRIC -> doFabricTests(projectDir, config)
             ModLoader.NEOFORGE -> doNeoForgeTests(projectDir, config)
         }
 
-    private suspend fun doFabricTests(projectDir: File, config: FabricCompatExtension): List<TestResult> {
+    private suspend fun doFabricTests(projectDir: File, config: MinecraftCompatExtension): List<TestResult> {
         val currentVersion = FabricMeta.getCurrentVersion(projectDir)
         FabricMeta.prewarmLoader(config.loaderVersion, projectDir)
 
@@ -73,7 +77,7 @@ object GradleRunner {
         }
     }
 
-    private suspend fun doNeoForgeTests(projectDir: File, config: FabricCompatExtension): List<TestResult> {
+    private suspend fun doNeoForgeTests(projectDir: File, config: MinecraftCompatExtension): List<TestResult> {
         val currentVersion = NeoForgeMeta.getCurrentMcVersion(projectDir)
 
         val allVersions = NeoForgeMeta.getAllSupportedMcVersions()
@@ -134,10 +138,10 @@ object GradleRunner {
         }
     }
 
-    private fun runBuildForVersion(versionInfo: VersionInfo, projectDir: File, config: FabricCompatExtension) =
+    private fun runBuildForVersion(versionInfo: VersionInfo, projectDir: File, config: MinecraftCompatExtension) =
         TestResult(runBuild(projectDir, versionInfo, config), versionInfo)
 
-    fun runBuild(projectDir: File, versionInfo: VersionInfo? = null, config: FabricCompatExtension = FabricCompatExtension()): BuildResult {
+    fun runBuild(projectDir: File, versionInfo: VersionInfo? = null, config: MinecraftCompatExtension = MinecraftCompatExtension()): BuildResult {
         val wrapperPath = File(projectDir, gradleWrapper).absolutePath
         val cacheDir = versionInfo?.let { File(projectDir, ".gradle-compat-${it.mcVersion}") }
 

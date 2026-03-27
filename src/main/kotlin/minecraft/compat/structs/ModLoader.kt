@@ -1,4 +1,4 @@
-package minecraft.compat
+package minecraft.compat.structs
 
 import java.io.File
 

@@ -2,13 +2,20 @@ package minecraft.compat
 
 import minecraft.compat.structs.Ansi
 import kotlinx.coroutines.runBlocking
+import minecraft.compat.gradle.GradleRunner
+import minecraft.compat.gradle.VersionInfo
+import minecraft.compat.internal.CompatPatcher
+import minecraft.compat.internal.VersionBumper
+import minecraft.compat.meta.FabricMeta
+import minecraft.compat.meta.NeoForgeMeta
+import minecraft.compat.structs.ModLoader
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import java.io.File
 
 class FabricCompatPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val config = project.extensions.create("fabricCompat", FabricCompatExtension::class.java)
+        val config = project.extensions.create("fabricCompat", MinecraftCompatExtension::class.java)
 
         project.tasks.register("checkMinecraftCompatibility") {
             group = "minecraft-compatibility-checker"
@@ -169,7 +176,7 @@ class FabricCompatPlugin : Plugin<Project> {
         }
     }
 
-    private fun bumpFabric(projectDir: File, config: FabricCompatExtension) {
+    private fun bumpFabric(projectDir: File, config: MinecraftCompatExtension) {
         val currentTarget =
             VersionBumper.resolveCurrentTargetVersion(projectDir) ?: FabricMeta.getCurrentVersion(projectDir)
 
@@ -204,7 +211,7 @@ class FabricCompatPlugin : Plugin<Project> {
         applyBumpIfConfirmed(projectDir, plan)
     }
 
-    private fun bumpNeoForge(projectDir: File, config: FabricCompatExtension) {
+    private fun bumpNeoForge(projectDir: File, config: MinecraftCompatExtension) {
         val currentVersion = NeoForgeMeta.getCurrentMcVersion(projectDir)
         println("  Current target version: ${Ansi.BOLD}$currentVersion${Ansi.RESET}")
 
