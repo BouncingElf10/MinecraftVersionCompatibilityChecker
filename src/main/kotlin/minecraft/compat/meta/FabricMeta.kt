@@ -100,21 +100,35 @@ object FabricMeta {
         return resolved
     }
 
+    private fun isUnobfuscated(version: String): Boolean {
+        val parts = version.split(".").mapNotNull { it.toIntOrNull() }
+        if (parts.isEmpty()) return false
+        val major = parts[0]
+        val minor = parts.getOrNull(1) ?: 0
+        return major > 26 || (major == 26 && minor >= 1)
+    }
+
     suspend fun resolveVersions(mcVersion: String, config: MinecraftCompatExtension, projectDir: File): Versions {
         val loader = loaderCache ?: error("Call prewarmLoader() before resolveVersions()")
         val loom = resolveLoomVersion(config.loomVersion, projectDir)
 
-        val yarnList = client.get("https://meta.fabricmc.net/v2/versions/yarn/$mcVersion").body<List<YarnVersion>>()
+        val yarnList = try {
+            client.get("https://meta.fabricmc.net/v2/versions/yarn/$mcVersion").body<List<YarnVersion>>()
+        } catch (e: Exception) {
+            emptyList()
+        }
 
         val yarn = yarnList.firstOrNull { it.stable } ?: yarnList.firstOrNull()
-        ?: error("No yarn mappings found for $mcVersion")
+        if (yarn == null && !isUnobfuscated(mcVersion)) {
+            error("No yarn mappings found for $mcVersion")
+        }
 
         val fabricApi = getFabricApiVersion(mcVersion)
 
         return Versions(
             mcVersion = MinecraftVersion(mcVersion, true),
             loaderVersion = loader,
-            yarnVersion = yarn,
+            yarnVersion = yarn ?: YarnVersion(version = "unobfuscated", stable = true),
             fabricApiVersion = fabricApi,
             loomVersion = loom
         )
