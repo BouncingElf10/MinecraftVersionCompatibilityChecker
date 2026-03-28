@@ -23,42 +23,51 @@ All options are set via the fabricCompat block in your build.gradle. Everything 
 
 ```groovy
 // build.gradle
-fabricCompat {
-    // How many consecutive failures in one direction before stopping.
+minecraftCompat {
+    // Max consecutive failures before stopping in one direction
     // Default: 3
     maxStrikes = 3
 
-    // Whether to test versions newer than your current version.
+    // Test newer Minecraft versions
     // Default: true
     checkNewerVersions = true
 
-    // Whether to test versions older than your current version.
+    // Test older Minecraft versions
     // Default: true
     checkOlderVersions = true
 
-    // Pin the Fabric Loom version used for test builds.
-    // Default: null (auto-resolved from gradle.properties)
+    // Override Fabric Loom version
+    // Default: auto-detected
     loomVersion = null
 
-    // Pin the Fabric loader version used for test builds.
-    // Default: null (latest stable loader)
+    // Override Fabric Loader version
+    // Default: latest stable
     loaderVersion = null
 
-    // Gradle tasks to run for each version check.
-    // Use ["compileJava"] to skip jar packaging and run faster.
+    // Override NeoForge version
+    // Default: latest per MC version
+    neoforgeVersion = null
+
+    // Tasks to run per version check
+    // Use ["compileJava"] for faster checks
     // Default: ["build"]
     buildTasks = ["build"]
 
-    // Extra JVM args for the Gradle daemon spawned per build.
-    // Default: [] (no extra args)
+    // Extra JVM args for Gradle daemons
+    // Default: []
     daemonJvmArgs = ["-Xmx2g"]
 
-    // Print full build output for passing versions too.
+    // Print full logs even on success
     // Default: false
     verbose = false
 
-    // Decides if it bumps the version up or down
-    // Default: true    // bumps up!
-    bumpUp
+    // Direction for version bumping
+    // true = newer, false = older
+    // Default: true
+    bumpUp = true
+
+    // Force a specific target version instead of auto-detecting
+    // Example: "1.21.4"
+    bumpTargetVersion = null
 }
 ```
