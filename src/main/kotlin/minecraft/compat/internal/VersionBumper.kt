@@ -39,14 +39,35 @@ object VersionBumper {
 
     fun buildFabricPlan(projectDir: File, oldVersion: String, newVersions: Versions): BumpPlan {
         val newVersion = newVersions.mcVersion.version
-        val knownNewValues = mapOf(
+
+        if (isUnobfuscated(newVersion) && !isUnobfuscated(oldVersion)) {
+            val props = readProperties(projectDir)
+            if (props.containsKey("yarn_mappings")) {
+                println()
+                println("${Ansi.YELLOW}${Ansi.BOLD}WARNING: Minecraft $newVersion+ is unobfuscated.${Ansi.RESET}")
+                println("${Ansi.YELLOW}Yarn mappings have been discontinued for this version.${Ansi.RESET}")
+                println("${Ansi.YELLOW}Please switch to ${Ansi.CYAN}Mojang Mappings (mojmap)${Ansi.YELLOW} in your build.gradle.${Ansi.RESET}")
+                println()
+            }
+        }
+
+        val knownNewValues = mutableMapOf(
             "minecraft_version" to newVersion,
-            "yarn_mappings" to newVersions.yarnVersion.version,
             "loader_version" to newVersions.loaderVersion.version,
             "fabric_api_version" to newVersions.fabricApiVersion,
             "loom_version" to newVersions.loomVersion
         )
+
+        if (newVersions.yarnVersion.version != "unobfuscated") {
+            knownNewValues["yarn_mappings"] = newVersions.yarnVersion.version
+        }
+
         return buildPlanFrom(projectDir, oldVersion, newVersion, FABRIC_KNOWN_KEYS, knownNewValues)
+    }
+
+    private fun isUnobfuscated(version: String): Boolean {
+        val parts = version.split(".").mapNotNull { it.toIntOrNull() }
+        return parts.getOrNull(0)?.let { it > 26 || (it == 26 && (parts.getOrNull(1) ?: 0) >= 1) } ?: false
     }
 
     fun buildNeoForgePlan(projectDir: File, oldVersion: String, newVersions: NeoForgeVersions): BumpPlan {
